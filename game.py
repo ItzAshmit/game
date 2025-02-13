@@ -1,6 +1,6 @@
 import pygame
 from sys import exit
-
+import random
 
 def display_score():
     global current_time
@@ -21,15 +21,15 @@ pygame.display.set_caption("My Game")
 clock = pygame.time.Clock()
 test_font = pygame.font.Font(r"C:\Users\karth\Downloads\ComingSoon-Regular.ttf", 50)
 sky_surface = pygame.image.load(r"C:\Users\karth\Pictures\sky.png").convert_alpha()
-enemy_surface2 = pygame.image.load(r"C:\Users\karth\Downloads\car (1).png").convert_alpha()
-enemy_rect2 = enemy_surface2.get_rect(center=(350,290))
-
+enemy_surface2 = pygame.image.load(r"C:\Users\karth\game\monster-truck.png").convert_alpha()
+enemy_rect2 = enemy_surface2.get_rect(center=(-100,300))
+enemy_surface2 = pygame.transform.flip(enemy_surface2, True, False)
 text_surface = test_font.render("lets start", False, "cyan")
 score_rect = text_surface.get_rect(topleft=(220,43))
 enemy_surface = pygame.image.load(r"C:\Users\karth\Downloads\car (1).png").convert_alpha()
 enemy_rect = enemy_surface.get_rect(topleft=(350,290))
-ground = (0,250)
-player_surface = pygame.image.load(r"C:\Users\karth\Downloads\bluet (1).png").convert_alpha()
+
+player_surface = pygame.image.load(r"C:\Users\karth\game\bluet (1).png").convert_alpha()
 player_rect = player_surface.get_rect(topleft = (100, 315))
 player_rect = player_rect.inflate(-20, -20)
 enemy_rect = enemy_rect.inflate(-20, -20)
@@ -38,15 +38,32 @@ Atext_rect = Atext_surface.get_rect(topleft = (100, 315))
 player_gravity = 0
 start_time = 0
 start_time -= pygame.time.get_ticks() // 1000 // 60    
-
-snail_speed = 6
+current_enemy=[enemy_surface,enemy_rect]
+current_lap = 0
+monster_truck_gravity  = -20
+enemy_speed = 6
+player_jump_surface = pygame.image.load(r"C:\Users\karth\game\jump bluet.png").convert_alpha
+    
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
       
-    
+    if game_active:
+        if current_enemy[1].left <= -200:
+            enemy_speed += 0.25
+            current_lap += 1
+            if current_lap >= 5:
+                if random.random() <= 0.25:
+                    current_enemy[0] = enemy_surface2
+                    current_enemy[1] = enemy_rect2.copy()
+                    current_enemy[1].y = 300
+                    monster_truck_gravity = -20
+                else:
+                    current_enemy[0] = enemy_surface
+                    current_enemy[1] = enemy_rect.copy()
+                    current_enemy[1].x = -100
     
         # if game_active:
         #     if event.type == pygame.MOUSEMOTION:
@@ -67,27 +84,39 @@ while True:
         
         
         #ENEMY    
-        enemy_rect.left += snail_speed
+        current_enemy[1].left += enemy_speed
 
+        if current_enemy[0] == enemy_surface2:
+            current_enemy[1].x += enemy_speed - 5
+            monster_truck_gravity += 1 
+            current_enemy[1].y += monster_truck_gravity
 
-        if enemy_rect.left > 800:
-            enemy_rect.left = -200
-            snail_speed+=0.5
-        screen.blit(enemy_surface,enemy_rect)
+            if current_enemy[1].y >= 300:
+                current_enemy[1].y = 300
+                monster_truck_gravity = -20
 
-        if enemy_rect.colliderect(player_rect):
+        
+
+        if current_enemy[1].left > 800:
+            current_enemy[1].left = -200
+            # snail_speed+=0.5
+        screen.blit(current_enemy[0],current_enemy[1])
+
+        if current_enemy[1].colliderect(player_rect):
             game_active = False
         #____________
 
         #PLAYER
         player_gravity+=1
         player_rect.y += player_gravity
-        
+        if player_rect.bottomleft >= (800,315):
+            player_rect.bottomleft = (-100,315)
         
         keys = pygame.key.get_pressed()
         #MOVEMENT
         if keys[pygame.K_SPACE] and player_rect.bottom >= 310:
             player_gravity = -20 
+
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             player_rect.left += -5
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
@@ -140,18 +169,15 @@ while True:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RETURN]:
                 game_active = True
-                enemy_rect.left =  350
-                score_rect = text_surface.get_rect(topleft=(220,43))
-                enemy_surface = pygame.image.load(r"C:\Users\karth\Downloads\car (1).png").convert_alpha()
+                current_enemy[1].left =  350
+                player_rect.x = 100
                 enemy_rect = enemy_surface.get_rect(topleft=(350,290))
-                ground = (0,250)
-                player_surface = pygame.image.load(r"C:\Users\karth\Downloads\bluet (1).png").convert_alpha()
-                player_rect = player_surface.get_rect(topleft = (100, 315))
-                player_rect = player_rect.inflate(-20, -20)
-                enemy_rect = enemy_rect.inflate(-20, -20)
-                snail_speed = 6
-    
-
+                enemy_speed = 6
+                current_enemy[1].y = 300
+                monster_truck_gravity = -20
+                player_gravity = 0
+                current_enemy = [enemy_surface, enemy_rect.copy()]  
+                current_lap = 0
     
     
     # mouse_pos = pygame.mouse.get_pos()
